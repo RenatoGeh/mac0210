@@ -13,6 +13,14 @@ def dist_seg(p0, p1, q):
   proj = p0+t*(p1-p0)
   return np.sum((q-proj)**2)
 
+# Compares points p0 and p1 to q. Returns the minarg distance. Either p0 or p1.
+def min_pts(p0, p1, q):
+  d = np.sum((p0-q)**2)
+  e = np.sum((p1-q)**2)
+  if d < e:
+    return p0
+  return p1
+
 # Draws a circle with radius r, center p and number of points n.
 def draw_circle(p, r, n):
   glBegin(GL_TRIANGLE_FAN)

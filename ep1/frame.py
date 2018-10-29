@@ -16,6 +16,10 @@ class Frame(pyglet.window.Window):
   pre_bezier = None
 
   label = None
+  selected = None
+
+  cx, cy = 0, 0
+  m = None
 
   def __init__(self):
     super(Frame, self).__init__()
@@ -50,10 +54,17 @@ class Frame(pyglet.window.Window):
       glPopAttrib(GL_CURRENT_BIT)
     glColor3f(0, 0, 0)
     self.label.draw()
+    if self.m is not None:
+      glPushAttrib(GL_CURRENT_BIT)
+      glColor3f(0, 0, 0)
+      glBegin(GL_LINES)
+      glVertex2f(self.cx, self.cy)
+      glVertex2f(self.m[0], self.m[1])
+      glEnd()
+      glPopAttrib(GL_CURRENT_BIT)
 
-  def on_mouse_release(self, x, y, buttons, mods):
-    if buttons & mouse.LEFT:
-      print(len(self.pre_bezier))
+  def on_mouse_release(self, x, y, button, mods):
+    if button == mouse.LEFT:
       if len(self.pre_bezier) >= 3:
         self.elements.append(Bezier(np.array(self.pre_bezier[0]), np.array(self.pre_bezier[1]),
                                     np.array(self.pre_bezier[2]), np.array((x, y))))
@@ -62,6 +73,19 @@ class Frame(pyglet.window.Window):
       else:
         self.pre_bezier.append((x, y))
         self.label.text = "Pre-bezier points: " + str(len(self.pre_bezier))
+
+  def on_mouse_motion(self, x, y, dx, dy):
+    self.cx, self.cy = x, y
+    if len(self.elements) > 0:
+      min, imin = 0, 0
+      for i, e in enumerate(self.elements):
+        pm, d = e.distance(x, y)
+        e.active = False
+        if d > min:
+          min, imin = d, i
+          self.m = pm
+      self.selected = self.elements[imin]
+      self.selected.active = True
 
   def start(self):
     glClearColor(255, 255, 255, 1.0)
