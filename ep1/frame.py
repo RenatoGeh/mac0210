@@ -1,11 +1,15 @@
+import math
+
 import pyglet
 import pyglet.text as text
 from pyglet.window import mouse
+from pyglet.window import key
 from pyglet.gl import *
 
 import numpy as np
 
 import utils
+from label import Label
 from bezier import Bezier
 
 WIDTH = 1280
@@ -17,6 +21,8 @@ class Frame(pyglet.window.Window):
 
   label = None
   selected = None
+
+  measure_dist = False
 
   cx, cy = 0, 0
   m = None
@@ -32,9 +38,7 @@ class Frame(pyglet.window.Window):
 
     self.elements = []
     self.pre_bezier = []
-    self.label = text.Label("Pre-bezier points: 0",
-                            font_name='Times New Roman', font_size=12,
-                            x=10, y=25, anchor_y='center', color=(0, 0, 0, 255))
+    self.label = Label()
 
   def on_draw(self):
     self.clear()
@@ -52,40 +56,47 @@ class Frame(pyglet.window.Window):
       glColor3f(0, 1.0, 0)
       utils.draw_circle(self.pre_bezier[-1], 5, 10)
       glPopAttrib(GL_CURRENT_BIT)
-    glColor3f(0, 0, 0)
-    self.label.draw()
-    if self.m is not None:
+    if self.measure_dist and self.m is not None:
       glPushAttrib(GL_CURRENT_BIT)
-      glColor3f(0, 0, 0)
+      glColorf(0, 0, 0)
       glBegin(GL_LINES)
       glVertex2f(self.cx, self.cy)
       glVertex2f(self.m[0], self.m[1])
       glEnd()
       glPopAttrib(GL_CURRENT_BIT)
+    self.label.draw()
 
   def on_mouse_release(self, x, y, button, mods):
-    if button == mouse.LEFT:
+    if self.selected is not None:
+      self.selected.mouse_pressed(x, y, button, mods)
+    if button == mouse.RIGHT:
       if len(self.pre_bezier) >= 3:
         self.elements.append(Bezier(np.array(self.pre_bezier[0]), np.array(self.pre_bezier[1]),
                                     np.array(self.pre_bezier[2]), np.array((x, y))))
         self.pre_bezier = []
-        self.label.text = "Pre-bezier points: 0"
+        self.label.set_pre(0)
+        self.label.set_bezier(len(self.elements))
       else:
         self.pre_bezier.append((x, y))
-        self.label.text = "Pre-bezier points: " + str(len(self.pre_bezier))
+        self.label.set_pre(len(self.pre_bezier))
 
   def on_mouse_motion(self, x, y, dx, dy):
     self.cx, self.cy = x, y
     if len(self.elements) > 0:
-      min, imin = 0, 0
+      min, imin, pmin = math.inf, 0, None
       for i, e in enumerate(self.elements):
         pm, d = e.distance(x, y)
         e.active = False
-        if d > min:
+        if d < min:
           min, imin = d, i
-          self.m = pm
+          pmin = pm
+      self.m = pmin
       self.selected = self.elements[imin]
       self.selected.active = True
+
+  def on_key_press(self, sym, mods):
+    if sym == key.D:
+      self.measure_dist = not self.measure_dist
 
   def start(self):
     glClearColor(255, 255, 255, 1.0)

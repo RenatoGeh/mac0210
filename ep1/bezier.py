@@ -30,6 +30,7 @@ class Bezier:
   dk = None # Bezier polynomial derivative coefficients
 
   active = None # Sets this Bezier as the selected curve
+  sel_vtx = None
 
   # Arguments p0, p1, p2 and p3 are (x, y) coordinates (a, b, c, d) of a Bezier curve described by
   # the polynomial:
@@ -57,6 +58,17 @@ class Bezier:
       self.dk[i][1] = c2 << 1
       self.dk[i][2] = c3
 
+  def in_range(self, x, y):
+    p = np.array([x, y])
+    for i, q in enumerate(self.pts):
+      if np.sum((q-p)**2) < 25:
+        return i
+    return None
+
+  def mouse_pressed(self, x, y, button, mods):
+    if button == mouse.LEFT:
+      self.sel_vtx = self.in_range(x, y)
+
   def draw(self):
     glColor3f(0.66, 0.66, 0.66)
     glBegin(GL_LINES)
@@ -80,8 +92,14 @@ class Bezier:
       glColor3f(0.85, 0.15, 0.73)
     else:
       glColor3f(1.0, 0, 0)
-    for p in self.pts:
-      utils.draw_circle(p, 5, 10)
+    for i, p in enumerate(self.pts):
+      if self.active and i == self.sel_vtx:
+        glPushAttrib(GL_CURRENT_BIT)
+        glColor3f(0, 1.0, 0)
+        utils.draw_circle(p, 5, 10)
+        glPopAttrib(GL_CURRENT_BIT)
+      else:
+        utils.draw_circle(p, 5, 10)
 
   def distance(self, x, y):
     fd = 2*np.polyadd(np.polymul(self.dk[0], np.polysub(self.k[0], np.array([0, 0, 0, x]))),
@@ -89,7 +107,7 @@ class Bezier:
     rt = np.roots(fd)
     im, m = 0, math.inf
     for r in rt:
-      if r <= 1 and r >= 0:
+      if r.imag == 0 and r <= 1 and r >= 0:
         v = np.polyval(fd, r)
         if v < m:
           im, m = r, v
@@ -97,7 +115,7 @@ class Bezier:
     q = np.array([x, y])
     p = utils.min_pts(p, self.pts[0], q)
     p = utils.min_pts(p, self.pts[3], q)
-    return p, (x-p[0])**2+(y-p[1])**2
+    return p, np.sum((p-q)**2)
 
   def f(self, t, axis=None):
     if axis is None:
