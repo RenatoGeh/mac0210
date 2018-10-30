@@ -1,6 +1,7 @@
 import math
 
 from numpy.polynomial import polynomial as poly
+from pyglet.window import mouse
 import numpy as np
 from pyglet.gl import *
 
@@ -58,6 +59,12 @@ class Bezier:
       self.dk[i][1] = c2 << 1
       self.dk[i][2] = c3
 
+  def cycle_vertex(self):
+    if self.sel_vtx is None:
+      self.sel_vtx = 0
+    else:
+      self.sel_vtx = (self.sel_vtx + 1)%4
+
   def in_range(self, x, y):
     p = np.array([x, y])
     for i, q in enumerate(self.pts):
@@ -69,6 +76,12 @@ class Bezier:
     if button == mouse.LEFT:
       self.sel_vtx = self.in_range(x, y)
 
+  def mouse_dragged(self, x, y, dx, dy, buttons, mods):
+    if self.sel_vtx is not None:
+      if buttons & mouse.LEFT:
+        self.pts[self.sel_vtx][0] = x
+        self.pts[self.sel_vtx][1] = y
+
   def draw(self):
     glColor3f(0.66, 0.66, 0.66)
     glBegin(GL_LINES)
@@ -79,25 +92,17 @@ class Bezier:
     glVertex2f(self.pts[2][0], self.pts[2][1])
     glVertex2f(self.pts[3][0], self.pts[3][1])
     glEnd()
-    glColor3f(0, 1.0, 0)
-    n = 5
-    t, k = 0, 1.0/n
-    for i in range(n+1):
-      p = self.f(t)
-      utils.draw_circle(p, 5, 10)
-      t += k
     glColor3f(0.0, 0.0, 0.0)
     _de_casteljau(self.pts)
+    c = (1.0, 0, 0)
     if self.active:
-      glColor3f(0.85, 0.15, 0.73)
-    else:
-      glColor3f(1.0, 0, 0)
+      c = (0.85, 0.15, 0.73)
+    glColor3f(*c)
     for i, p in enumerate(self.pts):
       if self.active and i == self.sel_vtx:
-        glPushAttrib(GL_CURRENT_BIT)
         glColor3f(0, 1.0, 0)
         utils.draw_circle(p, 5, 10)
-        glPopAttrib(GL_CURRENT_BIT)
+        glColor3f(*c)
       else:
         utils.draw_circle(p, 5, 10)
 
@@ -116,6 +121,19 @@ class Bezier:
     p = utils.min_pts(p, self.pts[0], q)
     p = utils.min_pts(p, self.pts[3], q)
     return p, np.sum((p-q)**2)
+
+  def bounds(self):
+    xmin, ymin, xmax, ymax = math.inf, math.inf, 0, 0
+    for p in self.pts:
+      if p[0] < xmin:
+        xmin = p[0]
+      if p[1] < ymin:
+        ymin = p[0]
+      if p[0] > xmax:
+        xmax = p[0]
+      if p[1] > ymax:
+        ymax = p[1]
+    return xmin, ymax, xmax, ymin
 
   def f(self, t, axis=None):
     if axis is None:

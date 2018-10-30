@@ -9,6 +9,7 @@ from pyglet.gl import *
 import numpy as np
 
 import utils
+from box import Box
 from label import Label
 from bezier import Bezier
 
@@ -21,6 +22,8 @@ class Frame(pyglet.window.Window):
 
   label = None
   selected = None
+
+  box = None
 
   measure_dist = False
 
@@ -39,6 +42,10 @@ class Frame(pyglet.window.Window):
     self.elements = []
     self.pre_bezier = []
     self.label = Label()
+    self.box = Box()
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_BLEND)
 
   def on_draw(self):
     self.clear()
@@ -58,13 +65,33 @@ class Frame(pyglet.window.Window):
       glPopAttrib(GL_CURRENT_BIT)
     if self.measure_dist and self.m is not None:
       glPushAttrib(GL_CURRENT_BIT)
-      glColorf(0, 0, 0)
+      glColor3f(0.7, 0.7, 0.7)
       glBegin(GL_LINES)
       glVertex2f(self.cx, self.cy)
       glVertex2f(self.m[0], self.m[1])
       glEnd()
       glPopAttrib(GL_CURRENT_BIT)
+    self.box.draw()
     self.label.draw()
+
+  def on_mouse_press(self, x, y, button, mods):
+    self.cx, self.cy = x, y
+    if len(self.elements) > 0:
+      min, imin, pmin = math.inf, 0, None
+      for i, e in enumerate(self.elements):
+        pm, d = e.distance(x, y)
+        e.active = False
+        if d < min:
+          min, imin = d, i
+          pmin = pm
+      self.m = pmin
+      nsel = self.elements[imin]
+      if nsel != self.selected and self.selected is not None:
+        self.selected.sel_vtx = None
+      self.selected = nsel
+      self.selected.active = True
+      self.label.set_dist(math.sqrt(min))
+    self.box.mouse_pressed(x, y, button, mods)
 
   def on_mouse_release(self, x, y, button, mods):
     if self.selected is not None:
@@ -79,24 +106,22 @@ class Frame(pyglet.window.Window):
       else:
         self.pre_bezier.append((x, y))
         self.label.set_pre(len(self.pre_bezier))
+    self.box.mouse_released(x, y, button, mods)
+
+  def on_mouse_drag(self, x, y, dx, dy, buttons, mods):
+    if self.selected is not None:
+      self.selected.mouse_dragged(x, y, dx, dy, buttons, mods)
+    self.box.mouse_dragged(x, y, dx, dy, buttons, mods)
 
   def on_mouse_motion(self, x, y, dx, dy):
-    self.cx, self.cy = x, y
-    if len(self.elements) > 0:
-      min, imin, pmin = math.inf, 0, None
-      for i, e in enumerate(self.elements):
-        pm, d = e.distance(x, y)
-        e.active = False
-        if d < min:
-          min, imin = d, i
-          pmin = pm
-      self.m = pmin
-      self.selected = self.elements[imin]
-      self.selected.active = True
+    pass
 
   def on_key_press(self, sym, mods):
     if sym == key.D:
       self.measure_dist = not self.measure_dist
+      self.label.set_dist_mode(self.measure_dist)
+    if self.selected is not None and sym == key.TAB:
+      self.selected.cycle_vertex()
 
   def start(self):
     glClearColor(255, 255, 255, 1.0)
