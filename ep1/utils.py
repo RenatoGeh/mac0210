@@ -21,6 +21,10 @@ def min_pts(p0, p1, q):
     return p0
   return p1
 
+# Returns whether a rectangle (p0, p1) contains a point q.
+def contains_pt(p0, p1, q):
+  return q[0] >= p0[0] and q[0] <= p1[0] and q[1] <= p0[1] and q[1] >= p1[1]
+
 # Draws a circle with radius r, center p and number of points n.
 def draw_circle(p, r, n):
   glBegin(GL_TRIANGLE_FAN)

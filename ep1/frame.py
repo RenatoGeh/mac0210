@@ -9,7 +9,6 @@ from pyglet.gl import *
 import numpy as np
 
 import utils
-from box import Box
 from label import Label
 from bezier import Bezier
 
@@ -23,9 +22,10 @@ class Frame(pyglet.window.Window):
   label = None
   selected = None
 
-  box = None
+  pres_mode = False
 
   measure_dist = False
+  bezier_degree = 3
 
   cx, cy = 0, 0
   m = None
@@ -42,7 +42,6 @@ class Frame(pyglet.window.Window):
     self.elements = []
     self.pre_bezier = []
     self.label = Label()
-    self.box = Box()
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_BLEND)
@@ -71,56 +70,75 @@ class Frame(pyglet.window.Window):
       glVertex2f(self.m[0], self.m[1])
       glEnd()
       glPopAttrib(GL_CURRENT_BIT)
-    self.box.draw()
     self.label.draw()
+
+  def _select(self, e):
+    if e != self.selected and self.selected is not None:
+      self.selected.sel_vtx = None
+      self.selected.active = False
+    self.selected = e
+    self.selected.active = True
 
   def on_mouse_press(self, x, y, button, mods):
     self.cx, self.cy = x, y
-    if len(self.elements) > 0:
-      min, imin, pmin = math.inf, 0, None
-      for i, e in enumerate(self.elements):
-        pm, d = e.distance(x, y)
-        e.active = False
-        if d < min:
-          min, imin = d, i
-          pmin = pm
-      self.m = pmin
-      nsel = self.elements[imin]
-      if nsel != self.selected and self.selected is not None:
-        self.selected.sel_vtx = None
-      self.selected = nsel
-      self.selected.active = True
-      self.label.set_dist(math.sqrt(min))
-    self.box.mouse_pressed(x, y, button, mods)
+    if button == mouse.LEFT:
+      if len(self.elements) > 0:
+        # First check if clicked on vertices themselves.
+        s = False
+        for e in self.elements:
+          v = e.in_range(x, y)
+          if v is not None:
+            self._select(e)
+            self.sel_vtx = v
+            s = True
+            break
+        if not s:
+          min, imin, pmin = math.inf, 0, None
+          for i, e in enumerate(self.elements):
+            pm, d = e.distance(x, y)
+            if d < min:
+              min, imin = d, i
+              pmin = pm
+          self.m = pmin
+          nsel = self.elements[imin]
+          self._select(nsel)
+          self.label.set_dist(math.sqrt(min))
 
   def on_mouse_release(self, x, y, button, mods):
     if self.selected is not None:
       self.selected.mouse_pressed(x, y, button, mods)
     if button == mouse.RIGHT:
-      if len(self.pre_bezier) >= 3:
-        self.elements.append(Bezier(np.array(self.pre_bezier[0]), np.array(self.pre_bezier[1]),
-                                    np.array(self.pre_bezier[2]), np.array((x, y))))
+      if len(self.pre_bezier) >= self.bezier_degree:
+        p = [np.array(self.pre_bezier[i]) for i in range(self.bezier_degree)]
+        p.append(np.array((x, y)))
+        self.elements.append(Bezier(*p, degree=self.bezier_degree))
         self.pre_bezier = []
         self.label.set_pre(0)
         self.label.set_bezier(len(self.elements))
       else:
         self.pre_bezier.append((x, y))
         self.label.set_pre(len(self.pre_bezier))
-    self.box.mouse_released(x, y, button, mods)
 
   def on_mouse_drag(self, x, y, dx, dy, buttons, mods):
     if self.selected is not None:
       self.selected.mouse_dragged(x, y, dx, dy, buttons, mods)
-    self.box.mouse_dragged(x, y, dx, dy, buttons, mods)
 
   def on_mouse_motion(self, x, y, dx, dy):
     pass
 
   def on_key_press(self, sym, mods):
-    if sym == key.D:
+    if sym == key.P:
+      self.pres_mode = not self.pres_mode
+      self.label.set_pres_mode(self.pres_mode)
+      for e in self.elements:
+        e.hide = self.pres_mode
+    elif sym == key.D:
       self.measure_dist = not self.measure_dist
       self.label.set_dist_mode(self.measure_dist)
-    if self.selected is not None and sym == key.TAB:
+    elif sym == key.G:
+      self.bezier_degree = 2 + (self.bezier_degree + 1) % 2 # switch between 2 and 3
+      self.label.set_bezier_deg(self.bezier_degree)
+    elif self.selected is not None and sym == key.TAB:
       self.selected.cycle_vertex()
 
   def start(self):
