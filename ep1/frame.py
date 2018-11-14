@@ -138,6 +138,13 @@ class Frame(pyglet.window.Window):
     elif sym == key.G:
       self.bezier_degree = 2 + (self.bezier_degree + 1) % 2 # switch between 2 and 3
       self.label.set_bezier_deg(self.bezier_degree)
+    elif sym == key.X and mods & key.MOD_SHIFT:
+      self.elements = []
+      self.label.set_bezier(0)
+    elif sym == key.DELETE and self.selected:
+      self.elements.remove(self.selected)
+      self.selected = None
+      self.label.set_bezier(len(self.elements))
     elif self.selected is not None and sym == key.TAB:
       self.selected.cycle_vertex()
 

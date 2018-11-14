@@ -116,6 +116,7 @@ class Bezier:
       if buttons & mouse.LEFT:
         self.pts[self.sel_vtx][0] = x
         self.pts[self.sel_vtx][1] = y
+        self.recompute()
 
   def draw(self):
     if not self.hide:

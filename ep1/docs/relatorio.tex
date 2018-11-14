@@ -1,0 +1,236 @@
+\documentclass[12pt]{article}
+
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{thmtools,thm-restate}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage[singlelinecheck=false]{caption}
+\usepackage[backend=biber,url=true,doi=true,eprint=false,style=numeric]{biblatex}
+\usepackage{enumitem}
+\usepackage[justification=centering]{caption}
+\usepackage{indentfirst}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{listings}
+\usepackage[x11names,rgb,table]{xcolor}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{linegoal}
+\usepackage{geometry}
+\usetikzlibrary{snakes,arrows,shapes}
+
+\addbibresource{references.bib}
+\graphicspath{{imgs/}}
+
+\makeatletter
+\def\subsection{\@startsection{subsection}{3}%
+  \z@{.5\linespacing\@plus.7\linespacing}{.1\linespacing}%
+  {\normalfont}}
+\makeatother
+
+\makeatletter
+\patchcmd{\@setauthors}{\MakeUppercase}{}{}{}
+\makeatother
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\Val}{\text{Val}}
+\DeclareMathOperator*{\Ch}{\text{Ch}}
+\DeclareMathOperator*{\Pa}{\text{Pa}}
+\DeclareMathOperator*{\Sc}{\text{Sc}}
+\newcommand{\ov}{\overline}
+\newcommand{\tsup}{\textsuperscript}
+
+\newcommand\defeq{\mathrel{\overset{\makebox[0pt]{\mbox{\normalfont\tiny\sffamily def}}}{=}}}
+
+\newcommand{\algorithmautorefname}{Algorithm}
+\algrenewcommand\algorithmicrequire{\textbf{Entrada}}
+\algrenewcommand\algorithmicensure{\textbf{Saída}}
+\algrenewcommand\algorithmicif{\textbf{se}}
+\algrenewcommand\algorithmicthen{\textbf{então}}
+\algrenewcommand\algorithmicelse{\textbf{senão}}
+\algrenewcommand\algorithmicfor{\textbf{para todo}}
+\algrenewcommand\algorithmicdo{\textbf{faça}}
+\algnewcommand{\LineComment}[1]{\State\,\(\triangleright\) #1}
+
+\captionsetup[table]{labelsep=space}
+
+\theoremstyle{plain}
+
+\newcounter{dummy-def}\numberwithin{dummy-def}{section}
+\newtheorem{definition}[dummy-def]{Definition}
+\newcounter{dummy-thm}\numberwithin{dummy-thm}{section}
+\newtheorem{theorem}[dummy-thm]{Theorem}
+\newcounter{dummy-prop}\numberwithin{dummy-prop}{section}
+\newtheorem{proposition}[dummy-prop]{Proposition}
+\newcounter{dummy-corollary}\numberwithin{dummy-corollary}{section}
+\newtheorem{corollary}[dummy-corollary]{Corollary}
+\newcounter{dummy-lemma}\numberwithin{dummy-lemma}{section}
+\newtheorem{lemma}[dummy-lemma]{Lemma}
+\newcounter{dummy-ex}\numberwithin{dummy-ex}{section}
+\newtheorem{exercise}[dummy-ex]{Exercise}
+\newcounter{dummy-eg}\numberwithin{dummy-eg}{section}
+\newtheorem{example}[dummy-eg]{Example}
+
+\numberwithin{equation}{section}
+
+\newcommand{\set}[1]{\mathbf{#1}}
+\newcommand{\pr}{\text{P}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\ddspn}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\iddspn}[2]{\partial#1/\partial#2}
+\newcommand{\indep}{\perp}
+\renewcommand{\implies}{\Rightarrow}
+
+\newcommand{\bigo}{\mathcal{O}}
+
+\setlength{\parskip}{1em}
+
+\lstset{frameround=fttt,
+	numbers=left,
+	breaklines=true,
+	keywordstyle=\bfseries,
+	basicstyle=\ttfamily,
+}
+
+\newcommand{\code}[1]{\lstinline[mathescape=true]{#1}}
+\newcommand{\mcode}[1]{\lstinline[mathescape]!#1!}
+
+\title{%
+  Curvas de Bézier\\~\\
+  {\normalfont EP1 de MAC0210}
+}
+\author{Renato Lui Geh, NUSP: 8536030}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+
+O EP foi feito na linguagem Python. Foi usada a biblioteca pyglet\footnote{Disponível em
+\url{https://bitbucket.org/pyglet/pyglet/wiki/Home}}, que age como um \textit{wrapper} de OpenGL
+para Python. Toda a parte de desenho e GUI foi feita com esta biblioteca.
+
+Para rodar o EP, é preciso do Python 3 e que a biblioteca pyglet esteja instalada. Além disso,
+alguns cálculos foram feitos com NumPy.
+
+Para executar o EP, faça:
+
+\begin{lstlisting}[numbers=none]
+  python3 main.py
+\end{lstlisting}
+
+\section{Uso}
+
+O arquivo \code{main.py} roda o programa, que constrói uma janela com um canvas vazio. A janela
+inicial apresenta as instruções de uso e algumas informações do ambiente atual.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/initial.png}}
+\end{figure}
+
+No canto inferior esquerdo ficam as informações atuais do ambiente. No canto inferior direito é
+possível encontrar os comandos disponíveis.
+
+Com o botão direito do mouse, cria-se um dos pontos da curva de Bézier. Se o grau da curva é dois,
+são precisos três pontos; se três, quatro pontos são necessários.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/1.png}}
+\end{figure}
+
+Após criadas, é possível selecionar uma curva com o botão esquerdo. Ao clicar com o botão esquerdo,
+seleciona-se a curva mais próxima do cursor. O modo de debug de distância (hotkey D) desenha o
+vetor diferença entre a posição do cursor e o ponto mais próximo da curva ao cursor. No painel de
+informação também é possível ver a distância calculada ``Distance to curve''.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/2.png}}
+\end{figure}
+
+Após selecionada, a curva pode ser alterada modificando as posições dos seus pontos. Selecionam-se
+os pontos clicando nas bolas rosas da curva. O vértice selecionado é então redesenhado com a cor
+verde. Alternativamente, é possível ciclar pelos pontos de forma mais rápida usando TAB. Após
+selecionado, o ponto pode ser movido apertando com o botão esquerdo e arrastando.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/3.png}}
+\end{figure}
+
+Com a tecla G, é possível mudar o grau das curvas a serem criadas. Foram implementadas curvas de
+grau dois e três.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/4.png}}
+\end{figure}
+
+O programa lida bem com várias curvas, e mesmo quando há interseção das curvas e de seus vértices,
+é possível seleciona-las e movimenta-las livremente.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/5.png}}
+\end{figure}
+
+É possível entrar em modo apresentação (hotkey P). Quando em modo de apresentação, o programa deixa
+de desenhar os pontos da curva, os paineis de instrução e comandos, e deixa de colorir as retas
+selecionadas.
+
+\begin{figure}[h]
+  \centering\frame{\includegraphics[width=0.8\textwidth]{imgs/6.png}}
+\end{figure}
+
+É possível remover uma curva selecionando-a e apertando a tecla DELETE. Para limpar o canvas e
+remover todas as curvas, aperte SHIFT+X.
+
+\section{Estrutura do código}
+
+O arquivo \code{main.py} que é usado para começar o EP cria um objeto da classe \code{Frame},
+localizado em \code{frame.py}. Esta classe cuida da criação da janela, do desenho de cada elemento
+do canvas, e do input de mouse e teclado.
+
+Toda vez que o botão direito é usado dentro do canvas, o \code{Frame} registra os pontos e verifica
+o número de pontos criados. Se este número for igual ao grau da curva de Bézier somado a um, então
+cria-se um novo objeto \code{Bezier} (em \code{bezier.py}), que representa a curva.
+
+Esta classe trata de tudo sobre a curva. Seu construtor toma os pontos da curva e seu grau. Deste
+jeito podemos computar os coeficientes do polinômio (representado pela variável \code{Bezier.k}) e
+os coeficientes de sua derivada (variável \code{Bezier.dk}). Esse calculo é feito pelo método
+\code{recompute}, que é chamado toda vez que mudamos os pontos da curva.
+
+A curva é desenhada pelo método de DeCasteljau. A função \code{_de_casteljau} e
+\code{_de_casteljau2} desenham as curvas de grau três e dois respectivamente.
+
+Para computar a distância de uma curva de Bézier $B$ até um ponto $q$, usa-se o método
+\code{Bezier.distance}. A distância é computada tomando o mínimo da distância euclideana:
+
+\begin{equation*}
+  \argmin_{0\leq t\leq 1} d(q, B) = \sqrt{\left(B_x(t)-q_x\right)^2+\left(B_y(t)-q_y\right)^2}
+\end{equation*}
+
+Derivando e igualando a zero, temos um polinômio cujas raízes representam os máximos e mínimos da
+distância. Usamos a função \code{np.roots} da biblioteca NumPy para achar as raízes do polinômio.
+Em seguida, descartamos todas as raízes que não estejam em $\mathbb{R}$ e tomamos o mínimo dos
+restantes.
+
+Os métodos \code{Bezier.f} e \code{Bezier.df} tomam um $t$ e avaliam $(B_x(t), B_y(t))$ e
+$\ddspn{}{t}(B_x(t),B_y(t))$.
+
+A classe \code{Label} desenha os painéis de informação e instrução, e pode ser encontrada no
+arquivo \code{label.py}.
+
+O arquivo \code{utils.py} contém funções de conveniência, como por exemplo a distância de um ponto
+até um segmento de reta, o mínimo entre dois pontos e um outro ponto, e uma rotina para desenhar
+bolas através de triângulos (\code{GL_TRIANGLE_FAN} do OpenGL).
+
+\printbibliography[]
+
+\end{document}

@@ -36,9 +36,11 @@ class Label:
     self.cmds_label = text.Label("Key and mouse commands:\n  - Mouse:\n    LMB: Selects nearest " + \
                                  "curve\n    RMB: Creates new bezier vertex\n  - Keyboard:\n    "+ \
                                  "P: presentation mode\n    D: line distance mode\n    G: " + \
-                                 "change bezier degree", font_name="Times New Roman", font_size=12,
-                                 x=1050, y=95, anchor_y="center", color=(0, 0, 0, 255),
-                                 multiline=True, width=300)
+                                 "change bezier degree\n    Shift+X: clear canvas\n    Del: " + \
+                                 "destroy selected curve",
+                                 font_name="Times New Roman", font_size=12, x=1030, y=115,
+                                 anchor_y="center", color=(0, 0, 0, 255), multiline=True,
+                                 width=300)
 
   def retext(self):
     self.txt_bezier = "Number of bezier curves: %d" % (self.n_bezier)
