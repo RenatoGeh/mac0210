@@ -8,6 +8,7 @@ class Dataset:
   T = None
   Y = None
   n = None
+  max = None
 
   def __init__(self, fname=""):
     if fname == "":
@@ -19,6 +20,7 @@ class Dataset:
     self.n = len(D)
     self.T = D[:,0]
     self.Y = D[:,1]
+    self.max = np.max(self.Y)
 
   def add(self, t, y):
     self.T = np.insert(self.T, len(self.T), t)

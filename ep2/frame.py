@@ -43,9 +43,10 @@ class Frame(pyglet.window.Window):
     self.clear()
     glClear(GL_COLOR_BUFFER_BIT)
     print("Drawing spline")
-    self.spline.draw(50, 50)
+    sx, sy = WIDTH/self.m, 0.6*HEIGHT/self.data.max
+    self.spline.draw(sx, sy)
     print("Drawing dataset points")
-    self.data.draw(50, 50)
+    self.data.draw(sx, sy)
 
   def on_key_press(self, sym, mods):
     if sym == key.ESCAPE:
