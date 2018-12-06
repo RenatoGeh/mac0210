@@ -8,6 +8,7 @@ class Dataset:
   T = None
   Y = None
   n = None
+  m = None
   max = None
 
   def __init__(self, fname=""):
@@ -15,11 +16,13 @@ class Dataset:
       self.T = np.zeros(0)
       self.Y = np.zeros(0)
       self.n = 0
+      self.m = 0
       return
     D = np.loadtxt(fname)
-    self.n = len(D)
     self.T = D[:,0]
     self.Y = D[:,1]
+    self.n = len(D)
+    self.m = int(np.max(self.T)+1)
     self.max = np.max(self.Y)
 
   def add(self, t, y):
@@ -27,7 +30,7 @@ class Dataset:
     self.Y = np.insert(self.Y, len(self.Y), y)
 
   def draw(self, sx=1, sy=1):
-    glColor3i(255, 0, 0)
+    glColor3f(1.0, 0, 0)
     for i, _ in enumerate(self.T):
       utils.draw_circle((sx*self.T[i], sy*self.Y[i]), 2, 10)
 

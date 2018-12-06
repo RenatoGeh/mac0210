@@ -71,14 +71,14 @@ class Spline:
   def __init__(self, n, m):
     self.n = n
     self.m = m
-    self.M = _compute_M(n)
+    self.M = _compute_M(m)
 
   # Fits this Spline with dataset D and L2 lambda l.
   def fit(self, D, l):
     T, Y = D.get()
-    B = np.matlib.zeros((self.m, self.n))
-    for i in range(self.m):
-      for j in range(self.n):
+    B = np.matlib.zeros((self.n, self.m))
+    for i in range(self.n):
+      for j in range(self.m):
         B[i,j] = _beta(T[i]-j)
     print("B", B.shape)
     print("M", self.M.shape)
@@ -92,7 +92,7 @@ class Spline:
 
   def s(self, t):
     z = 0
-    for i in range(-3, 4):
+    for i in range(-4, 5):
       k = int(t)+i
       if k >= 0 and k < self.n:
         z += np.asscalar(self.a[k])*_beta(t-k)
@@ -100,7 +100,7 @@ class Spline:
 
   def draw(self, sx=1, sy=1):
     glBegin(GL_LINE_STRIP)
-    glColor3i(0, 0, 255)
+    glColor3f(0, 0, 1)
     i = 0
     while i < self.n:
       glVertex2i(int(sx*i), int(sy*self.s(i)))

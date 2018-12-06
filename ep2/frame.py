@@ -21,7 +21,7 @@ class Frame(pyglet.window.Window):
   n = None
   m = None
 
-  def __init__(self, D, n, l):
+  def __init__(self, D, l):
     super(Frame, self).__init__()
     self.set_size(WIDTH, HEIGHT)
     scr = pyglet.window.get_platform().get_default_display().get_default_screen()
@@ -34,8 +34,8 @@ class Frame(pyglet.window.Window):
     glEnable(GL_BLEND)
 
     self.data = D
-    self.m = D.n
-    self.n = n
+    self.m = D.m
+    self.n = D.n
     self.spline = Spline(self.n, self.m)
     self.spline.fit(D, l)
 
