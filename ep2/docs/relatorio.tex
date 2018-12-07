@@ -168,7 +168,12 @@ O primeiro, \code{filename}, refere-se ao nome do novo dataset file. O argumento
 valor do desvio padrão da gaussiana usada; \code{n} é o número de amostras a serem geradas; e
 \code{m} é o valor máximo que cada valor $y_i$ pode alcançar.
 
-A construção dos pares $(t_i,y_i)$ é bem simples, e é descrita no algoritmo abaixo.
+A construção dos pares $(t_i,y_i)$ é bem simples, e é descrita no Algoritmo 1. Desta forma
+garante-se que todos valores estejam no intervalo $[0, m]$. Como são amostrados por uma gaussiana,
+podemos amostrar diferentes curvas alterando o valor de $\sigma$. Quanto maior $\sigma$, mais
+``bruscas'' as curvas.
+
+Abaixo segue o algoritmo descrito.
 
 \begin{algorithm}[h]
   \caption*{\textbf{Algoritmo 1.} \code{generator.py}: gerador de dataset}
@@ -190,11 +195,7 @@ A construção dos pares $(t_i,y_i)$ é bem simples, e é descrita no algoritmo 
   \end{algorithmic}
 \end{algorithm}
 
-Desta forma garante-se que todos valores estejam no intervalo $[0, m]$. Como são amostrados por uma
-gaussiana, podemos amostrar diferentes curvas alterando o valor de $\sigma$. Quanto maior $\sigma$,
-mais ``bruscas'' as curvas.
-
-Abaixo segue um exemplo de escolha de parâmetros.
+Um exemplo de parâmetros para gerar o dataset:
 
 \begin{lstlisting}[numbers=none]
 $ python3 generator.py in.put 2 200 40
@@ -218,13 +219,13 @@ para cada valor em $[0,n)$, onde $\beta$ é a spline básica usada e $a$ é o ve
 
 Alterando o $\lambda$ e o número de splines usadas é possível observar como a curva muda. De fato,
 é possível perceber que a curva sofre ``overfitting'' quando $\lambda$ tende a zero.
-A~\autoref{fig:2} mostra este fenômeno sem mudar o número de splines básicas usadas.
+A~\autoref{fig:2} mostra este fenômeno com $\lambda=0.0001$ (``próximo'' de zero).
 \begin{figure}[h]
-  \centering\includegraphics[width=0.925\textwidth]{imgs/200_0-01.png}
+  \centering\includegraphics[width=0.9\textwidth]{imgs/200_0-01.png}
   \caption{Spline desenhada com $\lambda=0.01$ e 200 amostras.\label{fig:1}}
 \end{figure}
 \begin{figure}[H]
-  \centering\includegraphics[width=0.925\textwidth]{imgs/200_0-0001.png}
+  \centering\includegraphics[width=0.9\textwidth]{imgs/200_0-0001.png}
   \caption{Spline desenhada com $\lambda=0.0001$ e 200 amostras.\label{fig:2}}
 \end{figure}
 
@@ -348,7 +349,8 @@ de $t$ no domínio, achar o valor de
 
 No entanto, esta tarefa é $\bigo(nm)$, e será computada para cada instante de renderização.
 Portanto precisei otimizar esta parte do código. Otimizar esta soma foi fácil. É fácil ver que
-$\beta(t-i)=0$ no intervalo $[-4,4]$. Neste caso, podemos substituir a~\autoref{eq:1} pela forma
+$\beta(t-i)=0$ fora do intervalo $[-4,4]$. Neste caso, podemos substituir a~\autoref{eq:1} pela
+forma
 
 \begin{equation*}
   S(t)=\sum_{i=t-2}^{t+2} a_i\beta(t-i).
@@ -385,7 +387,7 @@ A função $\beta$ escolhida foi:
 
 Por causa desta escolha, $\beta$ toma valores não zero apenas no domínio $[-4,4]$, e tem imagem em
 apenas $[0,1]$. Isto trouxe problemas na hora de desenhar a spline, já que consideramos cada
-unidade atômica um píxel. Para solucionar este problema, aplicamos uma escala durante a computação
+unidade atômica um pixel. Para solucionar este problema, aplicamos uma escala durante a computação
 de $S(t)$.
 
 Desenhar cada valor de $S(t)$ consistia em desenhar o ponto $(s_x\cdot t, s_y\cdot S(t))$. Esta
